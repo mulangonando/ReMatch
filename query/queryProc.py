@@ -366,13 +366,7 @@ def get_helper_words(dep_seq,pos_seq,bag_of_words,index):
     return     (obj_subj,helper)      
         
 def rel_adjustment (rel,bag_of_words,pos_seq) :
-    birth_words = ["born",""]
-    heigh_words = ["tall"]
-    death_words = ["die"]
-    
-    print "Head : ", rel.head
     rels = []
-   # if 
     if rel.head_pos.find("VB")>-1 and rel.head == bag_of_words[0] and rel.num_nps >0 :
         if len(rel.non_ent_nouns) >0 :
             rel.head = rel.non_ent_nouns[-1]
@@ -381,7 +375,6 @@ def rel_adjustment (rel,bag_of_words,pos_seq) :
         rels.append(rel)
     else :
         lemmatizer = WordNetLemmatizer()
-        print rel.head_pos, "\n"
         rel_lemma = rel.head
         try:
             rel_lemma = lemmatizer.lemmatize(rel.head,wordnetProc.penn_to_wn(rel.head_pos))
@@ -446,9 +439,6 @@ def rel_adjustment (rel,bag_of_words,pos_seq) :
     return rels
         
 def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
-    print bag_of_words,"\n",pos_seq,"\n",ner_seq,"\n",chunk_seq
-    print dep_seq
-    
     verb_poss = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']
     bin_rels=[]
     question_words = ['who', 'how', 'why', 'whom', 'which', 'when', "where"] 
@@ -487,9 +477,6 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
                 while obj_chunk != "S-NP" and obj_chunk != "E-NP":
                     obj_chunk = chunk_seq[k+1]
                     obj_phrase = obj_phrase +" "+bag_of_words[k+1]
-                    if ner_seq[k+1].find("-LOC"):
-                        if bag_of_words[k].lower() in countries_list:
-                            gazz_word = "country"                               
                     k = k+1
                     
                 if k==int(dep[2])-1 :
@@ -534,8 +521,7 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
                 root_partmod_index = int(dep[2])-1
                 #print 'Root part mod : ', root_partmod_index
                 
-            if rel != None :
-               
+            if rel != None :               
                 subj_phrase = None
                 helper = None
                     
@@ -570,8 +556,6 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
                 named_entities = extract_named_entities(bag_of_words, ner_seq)
                 num_nps = num_noun_phrases (chunk_seq,pos_seq)
                 curr_rel=Relation(desire,rel, head_pos,prep,subj_phrase, helper,helper_pos,obj_phrase,num_nps,named_entities,non_ent_nouns)
-                
-                
                 
                 curr_rels = rel_adjustment (curr_rel,bag_of_words,pos_seq)
                 for curr in curr_rels :
@@ -659,8 +643,6 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
             helper_pos=pos_seq[root-1]
             rel = bag_of_words[root_partmod_index ]
             
-            #print "Relation : ", rel
-            
             head_pos = pos_seq[root_partmod_index]
             rel_index = root_partmod_index
             
@@ -699,8 +681,6 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
                         
                 #elif int(dep[1]) == rel_index +1 and str(dep[0])=="nsubj" and root_subj=="":
                 elif root_subj_index > -1 and int(dep[2])-1 == root_subj_index :
-                   
-                    #print "Indexes : ", root_obj_index,root_subj_index, "Z = ",z
                     root_subj = bag_of_words[int(dep[2])-1]                                
                     root_subj_chunk = chunk_seq[int(dep[2])-1]
                     
@@ -750,19 +730,15 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
             
             if i == j :
                 pass
-            else :                
-                #print "Bin Rels j : ",bin_rels[j].non_ent_nouns,bin_rels[j].named_entities,bin_rels[j].right,bin_rels[j].left
-                        
+            
+            else :                        
                 if (rel.helper == bin_rels[j].helper or rel.head == bin_rels[j].helper) :
                     if (rel.head_pos=='VBP' and bin_rels[j].head_pos=='JJ') :
                         rel.head = bin_rels[j].head +" "+ rel.head 
                         #rel.helper = rel.helper +" "+ bin_rels[j].helper                                            
                                 
                     if (rel.head_pos=='JJ' and bin_rels[j].head_pos=='VBP') :
-                        rel.head = rel.head +" "+ bin_rels[j].head
-                          
-                print "Helper Current : "+rel.helper#, rel.head
-                
+                        rel.head = rel.head +" "+ bin_rels[j].head                
                 
                 #print "ELIMINATOR :", rel_eliminator
                 rel_tokens = rel_eliminator.get(j).split(" ")
@@ -774,7 +750,7 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
                        rel.non_ent_nouns.remove(token)
                    except :
                        pass
-        print "\n \n Head : ", rel.head, " POS : ",rel.head_pos, rel.prep
+                   
         for n in rel.named_entities:
                 if n.lower() in countries_list and rel.prep=="of":
                     rel.helper = rel.helper + " " +"country"
@@ -790,13 +766,7 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
         for n in rel.right :
                 if n.lower() in countries_list  and rel.prep =="of" :
                     rel.helper = rel.helper + " " +"country"
-        
-        print "Length upto J :",len(rel_eliminator), " Total : ",len(bin_rels)
-        
-    '''for index in pop_indexes:
-        print "pop Index : ", index, "Size bin_rels : ", len(bin_rels)
-        bin_rels.pop(index)'''
-        
+                        
     return bin_rels
 
 def recursive_binaries(bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq,pos,binaries=[], sent_words = []):
@@ -819,9 +789,7 @@ def recursive_binaries(bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq,pos,binari
                     noun_chunk = chunk_seq[j-1]                                                
                     
                 sentence = noun +" "+ sentence #bag_of_words[0]+" "+noun +" "+ sentence
-                 
-                #print "Inner Sentence : ", sentence                              
-                #print noun 
+
                 sent_annotator=Annotator()
                 
                 sent_annotations = sent_annotator.getAnnotations(sentence,dep_parse=True)

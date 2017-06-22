@@ -37,6 +37,10 @@ with open(dbpedia_file) as f:
     # num_preds_without_instances = 54583
     start = True
     i=0
+
+
+
+
     num_instances=0
     for row in predicates:
         print row

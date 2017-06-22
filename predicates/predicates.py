@@ -7,21 +7,18 @@ Created on Wed Mar 22 10:25:34 2017
 """
 
 import cPickle as pickle
-import re
-import os, sys
+#import re
+import os
 from practnlptools.tools import Annotator
-import csv
+#import csv
+#from utils import strings
+#from utils import wordnetProc
 
-proj_dir = os.path.abspath(os.path.join('..'))
-binaries_dir = os.path.abspath(os.path.join('..','DBPedia','onto_binaries'))
-sys.path.append(proj_dir)
-dbpedia_prop = os.path.abspath(os.path.join(binaries_dir,"prop"))
-rels_file = os.path.abspath(os.path.join('..','DBPedia','rel_words.txt'))
-
-
-from utils import strings
-from utils import wordnetProc
-
+proj_dir = os.path.abspath(os.path.join('.'))
+binaries_dir = os.path.abspath(os.path.join('.','DBPedia','onto_binaries'))
+#sys.path.append(proj_dir)
+#dbpedia_prop = os.path.abspath(os.path.join(binaries_dir,"prop"))
+#rels_file = os.path.abspath(os.path.join('..','DBPedia','rel_words.txt'))
 
 annotator=Annotator()
 annotations = annotator.getAnnotations("currency code",dep_parse=True)
@@ -42,6 +39,7 @@ class KBproperty(object):
         self.phrases =  None
         self.syn_hypo = None
             
+'''
 def extract_annotations(annotations):
     srls = annotations['srl']
     poss = annotations['pos']
@@ -180,13 +178,13 @@ def file_processor() :
                 kb_prop.annotations["dep_seq"] = dep_seq
                 kb_prop.annotations["srls"] = srls
                                         
-                '''with open(dbpedia_prop+"_"+str(i)+".pkl", "wb") as data_file:
+                with open(dbpedia_prop+"_"+str(i)+".pkl", "wb") as data_file:
                     pickle.dump(kb_prop, data_file)
-                    data_file.close'''
+                    data_file.close
             
             i=i+1
                
-        f.close()
+        f.close()'''
 
 def get_AllKBproperties():
     
@@ -206,8 +204,8 @@ def get_AllKBproperties():
     
     return dbpedia_props
 
-def main():
+'''def main():
     file_processor()
     
 if __name__== "__main__":
-  main()
+  main()'''

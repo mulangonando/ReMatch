@@ -33,17 +33,17 @@ def process_query(query):
 def main():
         
     all_props = predicates.get_AllKBproperties()
-    
     bin_rels, bag_of_words=process_query("How many people live in the Capital of Australia?")
+    
+    j=1
     for relation in bin_rels :
-        print "DESIRE : ",relation.desire,relation.helper," ",relation.head, relation.non_ent_nouns, 'Right : ', relation.right," Left :  ",relation.left
+        weights,uri = sim.top_similar(all_props, relation, bag_of_words) 
+        print "Relation ", j+1 , " : \n"        
         
-        weights,uri = sim.top_similar(all_props, relation, bag_of_words) #,count_attribs, label_attribs,
-        
-        for i in range(len(weights)):
+        for i in range(len(weights)):            
             print str(weights[i])+" : "+uri[i]+"\n"
  
-    
+        j=j+1
     #EVALUATION CODE
     
     #end_time =start_time = strftime("%Y-%m-%d %H:%M:%S", gmtime())

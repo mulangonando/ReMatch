@@ -9,8 +9,8 @@ Created on Mon Mar 27 16:12:45 2017
 from nltk.corpus import wordnet as wn
 from nltk.corpus.reader.wordnet import WordNetError
 from nltk.stem import WordNetLemmatizer
-from nltk.stem import SnowballStemmer
-from nltk.stem.porter import *
+#from nltk.stem import SnowballStemmer
+from nltk.stem.porter import PorterStemmer 
 import numpy as np
 
 import editdistance
@@ -386,7 +386,7 @@ def top_similar(all_props, q_rels, q_bag):
         size = len(weights)
         
         i=0
-        while i<size and i<20 :
+        while i<size and i<10 :
             
             if this_weight > weights[i] :
                 j=size-2    
@@ -401,7 +401,7 @@ def top_similar(all_props, q_rels, q_bag):
                 break
             i = i+1
             
-        if i==size and size<20:
+        if i==size and size<10:
             if prop.prop_uri in uri :
                 pass
             else :
