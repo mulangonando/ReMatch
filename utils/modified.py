@@ -57,3 +57,54 @@ def top_similar(all_props, q_rels,count_attribs, label_attribs, q_bag):
                 uri[1]=uri[0]
                 uri[0]=prop.prop_uri
     return weight1,weight2,weight3, uri
+
+
+#CHECK CHECK
+
+#try :
+        #print "In try:",q_rels.head
+        h_derived_weight=0
+        for h in q_rels.head.split(" ") :
+            w = 0
+            for l in prop.label.split(" ") :
+                w = w + derivational_forms(h, l)
+            
+            if w>h_derived_weight:
+                h_derived_weight = w
+        
+        sim_vector.append(h_derived_weight)
+        
+        #Get the attributes for the head words
+        h_least_sim = 0
+        h_max_lch = 0
+        h_wup_sim = 0
+        for h in q_rels.head.split(" ") :
+            
+            l_sim = 0
+            l_lch = 0
+            l_wup = 0
+            
+            for l in prop.label.split(" ") :
+                (least_sim,max_lch,wup_sim ) = dist_all_synsets(h,l)
+                l_sim = l_sim + least_sim
+                l_lch = l_lch + max_lch
+                l_wup = l_wup + wup_sim
+            
+            if l_sim>h_least_sim:
+                h_least_sim=l_sim
+            if l_lch>h_max_lch:
+                h_max_lch=l_lch
+            if l_wup>h_wup_sim:
+                h_wup_sim= l_wup
+                
+        sim_vector.append(h_least_sim)
+        sim_vector.append(h_max_lch)
+        sim_vector.append(h_wup_sim)
+
+        hlp_derived_weight=0
+        for h in q_rels.helper.split(" ") :
+            w = derivational_forms(h, prop.label)
+            if w>hlp_derived_weight:
+                hlp_derived_weight = w
+        
+        sim_vector.append(hlp_derived_weight)

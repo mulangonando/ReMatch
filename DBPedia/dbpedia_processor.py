@@ -24,8 +24,8 @@ import time
 ###   WE WANT TO COUNT THE NUMBER OF TRIPPLES FOR EVERY RELATION AND CHECK TYPE OF OBJECTS AND SUBJECTS ####
 ############################################################################################################
 
-dbpedia_file = "to_refetch_counts"
-dbpedia_prd_no_inctances = "DBPedia_pred_counts"
+dbpedia_file = "DBPedia_plus_counts"
+dbpedia_prd_no_inctances = "DBPedia_counts_ratio"
 
 
 sparql = SPARQLWrapper("https://dbpedia.org/sparql")
@@ -35,36 +35,54 @@ with open(dbpedia_file) as f:
     predicates = csv.reader(f)
     num_preds_with_instances = 0
     # num_preds_without_instances = 54583
-    clean_predicates = ""
-    
+    start = True
     i=0
     num_instances=0
     for row in predicates:
         print row
-               
-        if i>0 :
-            sparql.setQuery("SELECT COUNT(?s) WHERE { ?s <"+row[0]+"> ?o . } ")
+        
+        clean_predicates = ""     
+        print "\n\nSELECT COUNT(DISTINCT ?s) COUNT(DISTINCT ?o)  WHERE { ?s <"+row[0].strip("'").strip('"')+"> ?o . } "
+        
+        try : 
+            sparql.setQuery("SELECT COUNT(DISTINCT ?s) COUNT(DISTINCT ?o)  WHERE { ?s <"+row[0].strip("'").strip('"')+"> ?o . } ")
+            #COUNT(DISTINCT ?s) COUNT(DISTINCT ?o) WHERE {?s <http://dbpedia.org/ontology/spouse> ?o}
+            
+            #print sparql.query
             sparql.setReturnFormat(JSON)
             results = sparql.query().convert()
         
-            count = 0;
+            #count = 0;
                     
             for result in results["results"]["bindings"]:
-                count = int(result["callret-0"]["value"])
-                              
-            if(count == 0) : 
-                pass
+                uniq_subs = int(result["callret-0"]["value"])
+                uniq_objs = int(result["callret-1"]["value"])
+                
+            #if(count == 0) : 
+            #    pass
                 #num_preds_without_instances = num_preds_without_instances +1
                 #f = open(dbpedia_prd_no_inctances, 'a') 
                 #f.write(str(row)[1:-1] +","+str(count)+"\n")
                 #f.close()  
                 
-            else :
-                num_preds_with_instances = num_preds_with_instances +1
-                clean_predicates = clean_predicates + str(row)[1:-1] +","+str(count)+"\n" 
+            #else :
+            num_preds_with_instances = num_preds_with_instances +1
+            the_row=""
+            j=0
+            for r in row :
+                if j==0 :
+                    the_row = the_row+str(r).strip('"').strip("'")
+                else :
+                    the_row = the_row+","+str(r).strip('"').strip("'")
+                j = j+1
+            
+            the_row = the_row +","+str(uniq_subs)+","+str(uniq_objs)+"\n" 
+                
+            clean_predicates = clean_predicates + the_row 
                 #print 
                 
             print "INSTANTIATED PREDICATES : ",num_preds_with_instances
+            print i
                 
                 #if len(row[1]) < 1 and len(row[2]) < 1 :
                 #    sparql.setQuery("SELECT ?s, ?o) WHERE { ?s <"+row[0]+"> ?o . } ")
@@ -80,11 +98,16 @@ with open(dbpedia_file) as f:
             
             #print row[-1]
             #num_instances = num_instances + int(row[-1])
+                
+            fileObject = open(dbpedia_prd_no_inctances,'a') 
+            fileObject.write(clean_predicates)
+            fileObject.close()
+        except :
+            pass
+        #if row[0].strip() == 'http://dbpedia.org/property/b\\xc3\\xbcrgermeistertitel' :
+        #    start = True
         i=i+1 
-        
-    fileObject = open(dbpedia_prd_no_inctances,'a') 
-    fileObject.write(clean_predicates)
-    fileObject.close()
+    
     #print "FOUND PREDICATES : ",
         
         #print row[0], count   

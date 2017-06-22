@@ -215,33 +215,41 @@ print ("Chunk feature extraction done : "+str(X_Chunk.shape))
 
 print ("Sarting to Process the Single Query")
 
-question = "In what city is the Heineken brewery?"
+question = "In what city is the Heineken brewery ?"
 
-#querry preprocessing
-question = preprocess(question)
+this_corpus = []
 
-print 'QUERY : '+question+'\n'
+line = question.rstrip('\n')
+this_line = preprocess(line)
+sentence = ""
+words = this_line.split()
+for i in range(0, len(words)):
+    if not(i == 0):
+        sentence = sentence + (words[i]) + " "
+    this_corpus.append(sentence)
 
 ###words in question###
-X_words = vectorizer_words.transform(question)
+X_words = vectorizer_words.transform(this_corpus)
 print 'lENGTH OF WORDS : '+ str(X_words.shape)
 
 ###POS tags in question###
-computed_POS=compute_POS_Tags(question)
+computed_POS=compute_POS_Tags(this_corpus)
 X_POS = vectorizer_POS.transform(computed_POS)
 print 'POS : '+str(X_POS.shape)+'\n'
 
 ###NER tags in question###
-computed_NER =compute_NER(question)
+computed_NER =compute_NER(this_corpus)
 X_NER = vectorizer_NER.transform(computed_NER)
 print 'NER : '+str(X_NER.shape)+'\n'
 
 ###Chunk tags in question###
-chunks = compute_Chunks(question)
+chunks = compute_Chunks(this_corpus)
 X_Chunk = vectorizer_Chunk.transform(chunks)
 print 'CHUNKS : '+str(X_Chunk.shape)+'\n'
 
-X = hstack(X_words[31], X_POS)
+print X_words.shape, " ",X_POS.shape
+
+X = hstack(X_words, X_POS)
 X_test = hstack((X, X_NER))
 X_test = hstack((X_test, X_Chunk))
 

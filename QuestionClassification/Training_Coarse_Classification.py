@@ -1,14 +1,12 @@
 import re
 import nltk
 from sklearn.feature_extraction.text import CountVectorizer
-#from nltk.tag.stanford import NERTagger
 from nltk.tag.stanford import StanfordNERTagger
 from scipy.sparse import hstack
 from sklearn.svm import LinearSVC
 from practnlptools.tools import Annotator
 from readproperties import read_property
 from sklearn.externals import joblib
-#import transformer
 
 ##removing special characters from sentence##
 def preprocess(raw_sentence):
@@ -96,7 +94,6 @@ for line in lines:
 
 
 ###words in question###
-print ("Training")
 f = open(read_property('word_features_train_coarse_path'), "r")
 corpus = []
 for lines in f:
@@ -107,16 +104,8 @@ for lines in f:
     corpus.append(words)
 vectorizer_words = CountVectorizer(min_df=1)
 X_words = vectorizer_words.fit_transform(corpus)
-joblib.dump(X_words, "features/x_coarse_words.pkl", compress=9) 
+joblib.dump(vectorizer_words, "features/x_coarse_words.pkl", compress=9) 
 f.close()
-
-#word_vectorizer = transformer.fit_transform(X_words)
-
-#store the content
-#with open("features/x_coarse_words.pkl", 'wb') as handle:
-
-print ("word feature extraction done : "+str(X_words.shape))
-
 
 ###POS tags in question###
 
@@ -131,17 +120,8 @@ for lines in f:
 vectorizer_POS = CountVectorizer(min_df=1)
 X_POS = vectorizer_POS.fit_transform((corpus))
 
-print '\n\n Try It :\n'
-
 joblib.dump(X_POS, "features/x_coarse_POS.pkl", compress=9) 
 f.close()
-print ("POS feature extraction done : " +str(X_POS.shape))
-
-#POS_vectorizer = transformer.fit_transform(X_POS)
-
-#store the content
-#with open("features/x_coarse_POS.pkl", 'wb') as handle:
-
 
 ###NER tags in question###
 
@@ -160,13 +140,6 @@ joblib.dump(X_NER, "features/x_coarse_NER.pkl", compress=9)
 f.close()
 print ("NER feature extraction done : "+str(X_NER.shape))
 
-#NER_vectorizer = transformer.fit_transform(X_NER)
-
-#store the content
-#with open("features/x_coarse_NER.pkl", 'wb') as handle:
-
-###Chunk tags in question###
-
 f = open(read_property('Chunk_features_train_path'), "r")
 corpus = []
 for lines in f:
@@ -180,10 +153,7 @@ X_Chunk = vectorizer_Chunk.fit_transform((corpus))
 f.close()
 print ("Chunk feature extraction done : "+str(X_Chunk.shape))
 
-#Chunks_vectorizer = transformer.fit_transform(X_Chunk)
-
-#store the content
-#with open("features/x_coarse_NER.pkl", 'wb') as handle:
+print type(X_Chunk)
 joblib.dump(X_Chunk, "features/x_coarse_Chunk.pkl", compress=9) 
 
 
@@ -193,33 +163,40 @@ X_train = hstack((X_train, X_Chunk))
 
 
 ######################################TESTING#############################
+corpus_test = "Give me all professional skateboarders from Sweden ? "
 
-print ("In Testing")
-#filename_test = read_property('testfilepath')
-#corpus_test, test_class_gold = file_preprocess(filename_test)
-corpus_test = "How many Oscas has Denzel won ? "
+this_corpus = []
+    
+line = corpus_test.rstrip('\n')
+line = preprocess(line)
+sentence = ""
+words = line.split()
+for i in range(0, len(words)):
+    if not(i == 0):
+        sentence = sentence + (words[i]) + " "
+this_corpus.append(sentence)
 
 ###words in question###
 
-X_words = vectorizer_words.transform(corpus_test)
+X_words = vectorizer_words.transform(this_corpus)
 print ("Word features extracted : "+str(X_words.shape))
 
 
 ###POS tags in question###
 
-X_POS = vectorizer_POS.transform(compute_POS_Tags(corpus_test))
+X_POS = vectorizer_POS.transform(compute_POS_Tags(this_corpus))
 print ("POS features extracted : "+str(X_POS.shape))
 
 
 ###NER tags in question###
 
-X_NER = vectorizer_NER.transform(compute_NER(corpus_test))
+X_NER = vectorizer_NER.transform(compute_NER(this_corpus))
 print ("NER features extracted : "+str(X_NER.shape))
 
 
 ###Chunk tags in question###
 
-X_Chunk = vectorizer_Chunk.transform(compute_Chunks(corpus_test))
+X_Chunk = vectorizer_Chunk.transform(compute_Chunks(this_corpus))
 print ("Chunk features extracted : "+str(X_Chunk.shape))
 
 
