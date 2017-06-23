@@ -33,12 +33,23 @@ def process_query(query):
 def main():
         
     all_props = predicates.get_AllKBproperties()
-    bin_rels, bag_of_words=process_query("How many people live in the Capital of Australia?")
+    #bin_rels, bag_of_words=process_query("How many people live in the Capital of Australia?")
+    #bin_rels, bag_of_words=process_query("Who is the wife of Barack Obama?")
+    #bin_rels, bag_of_words=process_query("Who wrote the book Harry Porter?")
+    bin_rels, bag_of_words=process_query("Give me all people that were born in Vienna and died in Berlin")
     
-    j=1
+    j=0
     for relation in bin_rels :
+        
         weights,uri = sim.top_similar(all_props, relation, bag_of_words) 
-        print "Relation ", j+1 , " : \n"        
+        
+        k=0
+        for word in bag_of_words :
+            if word.strip() == relation.head.strip():
+                del bag_of_words[k]
+            k = k+1
+            
+        print "Relation ", j+1 , relation.head, " : \n"        
         
         for i in range(len(weights)):            
             print str(weights[i])+" : "+uri[i]+"\n"
@@ -66,7 +77,7 @@ def main():
                 question = line[0]
                 len_line = len(line)
                 print "NOW THE CURRENT QUESTION : ", question
-                
+                Susanne Wandersee
                 curr_eval = ""
                 bin_rels, bag_of_words=process_query(question) 
                 j=0

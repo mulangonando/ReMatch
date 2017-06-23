@@ -11,14 +11,16 @@ import cPickle as pickle
 import os
 from practnlptools.tools import Annotator
 #import csv
-#from utils import strings
-#from utils import wordnetProc
+import sys
 
 proj_dir = os.path.abspath(os.path.join('.'))
-binaries_dir = os.path.abspath(os.path.join('.','DBPedia','onto_binaries'))
-#sys.path.append(proj_dir)
-#dbpedia_prop = os.path.abspath(os.path.join(binaries_dir,"prop"))
-#rels_file = os.path.abspath(os.path.join('..','DBPedia','rel_words.txt'))
+binaries_dir = os.path.abspath(os.path.join('DBPedia','onto_binaries'))
+sys.path.append(proj_dir)
+
+#from utils import strings
+#from utils import wordnetProc
+#import re
+
 
 annotator=Annotator()
 annotations = annotator.getAnnotations("currency code",dep_parse=True)
@@ -39,7 +41,7 @@ class KBproperty(object):
         self.phrases =  None
         self.syn_hypo = None
             
-'''
+
 def extract_annotations(annotations):
     srls = annotations['srl']
     poss = annotations['pos']
@@ -80,20 +82,9 @@ def extract_annotations(annotations):
 
 
 #PROCESSS THE FILES
-def file_processor() :
+'''def file_processor() :
     pred_file = os.path.join(proj_dir,"DBPedia","onto_counts_ratio")
-    
-    
-    words_dict = {}
-    
-    with open(rels_file) as f:
-        words = f.readlines()
         
-        for line in words:
-            #print line
-            entries = line.split(":")
-            words_dict[entries[0].strip(" ")] = entries[1].split(",")
-    
     #ORDER OF THE ITEMS : "property","domain","range","label","comment",count
     with open(pred_file) as f:
         predicates = csv.reader(f)
@@ -124,7 +115,7 @@ def file_processor() :
             pred_label = pred_label.replace("(","")
             pred_label = pred_label.replace(")","")
             
-            if pred_label.lower() == "population total" :
+            if pred_label.lower() == "death place" :
                
                 kb_prop.label = pred_label
                 
@@ -177,7 +168,7 @@ def file_processor() :
                 kb_prop.annotations["chunk_seq"] = chunk_seq
                 kb_prop.annotations["dep_seq"] = dep_seq
                 kb_prop.annotations["srls"] = srls
-                                        
+                                            
                 with open(dbpedia_prop+"_"+str(i)+".pkl", "wb") as data_file:
                     pickle.dump(kb_prop, data_file)
                     data_file.close
@@ -188,7 +179,6 @@ def file_processor() :
 
 def get_AllKBproperties():
     
-    #fileObject = open(dbpedia_binaries,'r')  
     dbpedia_props = []
     file_names = []
     for file in os.listdir(binaries_dir):
@@ -203,9 +193,3 @@ def get_AllKBproperties():
             f.close()
     
     return dbpedia_props
-
-'''def main():
-    file_processor()
-    
-if __name__== "__main__":
-  main()'''

@@ -48,7 +48,6 @@ class Relation(object):
 
 def compute_NER(corpus):
     NER = []
-    # fi=open("NER_features_train.txt","w")
     st = StanfordNERTagger('stanford-ner-2014-06-16/classifiers/english.all.3class.distsim.crf.ser.gz',
                    'stanford-ner-2014-06-16/stanford-ner.jar')
     ner = st.tag(corpus.split())
@@ -417,7 +416,6 @@ def rel_adjustment (rel,bag_of_words,pos_seq) :
                        rels.append(new_rel)
                    i=i+1
            else :
-               #print "GOT Herest",rel.named_entities#, rel.right
                rel.helper = rel.head
                rel.head = rel.named_entities[-1] 
  
@@ -434,7 +432,6 @@ def rel_adjustment (rel,bag_of_words,pos_seq) :
             elif bag_of_words[0].lower() == "when" :
                 rel.non_ent_nouns.append("date")
             rels.append(rel)
-        #print rel.non_ent_nouns,rel.named_entities#,rel.left#, rel.right#, rel.helper
         
     return rels
         
@@ -450,8 +447,6 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
     helper_pos =""
     head_pos =""
     rel_eliminator = {}
-    #nouns = extract_entity_classes(ner_seq)
-    
     root_partmod_index = -1
     
     for dep in dep_seq :
@@ -459,7 +454,6 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
             #curr_rel=None
             prep = "of"
             rel=None 
-            gazz_word = ""
             
             if(str(dep[0])[0:5] == "prep_"):
                 
@@ -469,11 +463,7 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
                 
                 obj_chunk = chunk_seq[k]
                 obj_phrase = bag_of_words[k]
-                
-                if ner_seq[k].find("-LOC"):
-                    if bag_of_words[k].lower() in countries_list:
-                        gazz_word = "country"
-                
+                                
                 while obj_chunk != "S-NP" and obj_chunk != "E-NP":
                     obj_chunk = chunk_seq[k+1]
                     obj_phrase = obj_phrase +" "+bag_of_words[k+1]
@@ -517,9 +507,7 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
                 root_partmod_index = int(dep[2])-1
                 
             if (str(dep[0])[0:] == "dep" or str(dep[0])[0:] =="amod") and int(dep[1]) == root and ner_seq[int(dep[2])-1] == "O" and pos_seq[int(dep[2])-1] not in verb_poss and pos_seq[int(dep[2])-1] not in non_obj_support:
-                #print "The dep is :", bag_of_words[int(dep[2])-1], '\n', dep 
                 root_partmod_index = int(dep[2])-1
-                #print 'Root part mod : ', root_partmod_index
                 
             if rel != None :               
                 subj_phrase = None
@@ -541,8 +529,6 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
                         subj_phrase = bag_of_words[j-1]+" "+subj_phrase                                   
                         j = j-1
                     
-                #print subj
-                
                 if subj_phrase == None or subj_phrase.find(obj_phrase)>-1 or (subj_phrase.lower() in question_words):
                     subj_phrase = "?" 
                     
@@ -575,7 +561,6 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
         if word == "'s" or word == "'":
             
             subj_chunk = chunk_seq[i+1 ]
-            #rel = bag_of_words[i+1]
             subject_phrase = bag_of_words[i+1]
             
             k=i+1
@@ -617,7 +602,6 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
             non_ent_nouns = extract_non_entity_nouns(bag_of_words,pos_seq,ner_seq)#.append(gazz_word)
             named_entities = extract_named_entities(bag_of_words, ner_seq)
             num_nps = num_noun_phrases (chunk_seq,pos_seq)
-            #helper = helper + gazz_word
             curr_rel=Relation(desire,rel,head_pos, prep,subj, helper,helper_pos,object_phrase,num_nps,named_entities,non_ent_nouns)
             
             bin_rels.append(curr_rel)
@@ -630,36 +614,38 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
     
        
     # NO POINT HERE JUST CHECK IF ANY OF ALREADY FOUND RELATIONS CONTAIN THE ROOT
-    if not rel_eq_root :
-        #print "Head POS : ",head_pos 
+    if not rel_eq_root : 
         root_subj =""
         root_obj = ""
         
-        rel_index = -1
-        #print 'Relation before . ',rel 
         if root_partmod_index > -1 :
            
             helper = bag_of_words[root-1]
             helper_pos=pos_seq[root-1]
-            rel = bag_of_words[root_partmod_index ]
-            
+            rel = bag_of_words[root_partmod_index ]            
             head_pos = pos_seq[root_partmod_index]
-            rel_index = root_partmod_index
             
         else :
             #THIS CASE SHOWS THAT THERE ARE NO PREPOSITIONS HENCE THE SENTENCE IS EITHER TOO SHORT OR CONTAINS OTHER ELEMENTS
             rel = bag_of_words[root-1]
             head_pos=pos_seq[root-1]
-            rel_index = root-1
-            helper = ""
+            #rel_index = root-1
+            helper = ""            
+            if (root >1 and chunk_seq[root-1].find("NP")>-1):
+                lemmatizer = WordNetLemmatizer()
+                for i in range(root-1,0,-1):
+                    if chunk_seq[i] == "B-NP" or chunk_seq[i] == "s-NP" and pos_seq[i-1].find("VB"):
+                        vb_lemma = lemmatizer.lemmatize(bag_of_words[i-1],wordnetProc.penn_to_wn(pos_seq[i-1]))
+                        if vb_lemma == "have" or vb_lemma == "be" or vb_lemma == "do":
+                            helper=vb_lemma
+                        else:
+                            rel = bag_of_words[i-1]
+                  
         z=1    
         for dep in dep_seq :
-            try:          
-                #if int(dep[1]) == rel_index +1 and str(dep[0])=="dobj" and root_obj=="":#use helper index
-                if root_obj_index > -1 and int(dep[2])-1 == root_obj_index: 
-                                    
-                    root_obj = root_obj+bag_of_words[root_obj_index]#root_obj = root_obj+" "+bag_of_words[int(dep[2])-1]
-                    
+            try: 
+                if root_obj_index > -1 and int(dep[2])-1 == root_obj_index:                                    
+                    root_obj = root_obj+bag_of_words[root_obj_index]#root_obj = root_obj+" "+bag_of_words[int(dep[2])-1]                    
                     root_obj_chunk = chunk_seq[int(dep[2])-1]
                     root_obj_chunk = chunk_seq[root_obj_index]
                      
@@ -679,7 +665,6 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
                             root_obj_chunk = chunk_seq[j-1]                                                                            
                             j = j-1
                         
-                #elif int(dep[1]) == rel_index +1 and str(dep[0])=="nsubj" and root_subj=="":
                 elif root_subj_index > -1 and int(dep[2])-1 == root_subj_index :
                     root_subj = bag_of_words[int(dep[2])-1]                                
                     root_subj_chunk = chunk_seq[int(dep[2])-1]
@@ -734,18 +719,14 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
             else :                        
                 if (rel.helper == bin_rels[j].helper or rel.head == bin_rels[j].helper) :
                     if (rel.head_pos=='VBP' and bin_rels[j].head_pos=='JJ') :
-                        rel.head = bin_rels[j].head +" "+ rel.head 
-                        #rel.helper = rel.helper +" "+ bin_rels[j].helper                                            
+                        rel.head = bin_rels[j].head +" "+ rel.head                                            
                                 
                     if (rel.head_pos=='JJ' and bin_rels[j].head_pos=='VBP') :
                         rel.head = rel.head +" "+ bin_rels[j].head                
-                
-                #print "ELIMINATOR :", rel_eliminator
+              
                 rel_tokens = rel_eliminator.get(j).split(" ")
                               
-                #print "Current Tokens : ",rel_tokens
                 for token in rel_tokens :
-                   #print "The Token : ",token,"\n The LIST : ", rel.non_ent_nouns
                    try:
                        rel.non_ent_nouns.remove(token)
                    except :
@@ -781,20 +762,17 @@ def recursive_binaries(bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq,pos,binari
                 j = i-1
                 noun_chunk = chunk_seq[j-1] 
                 noun = bag_of_words[j]
-                #print noun
                 
                 while j-1>-1 and noun_chunk != "S-NP" and noun_chunk.find("-NP") !=-1 :
                     j = j-1
                     noun = bag_of_words[j]+" " +noun
                     noun_chunk = chunk_seq[j-1]                                                
                     
-                sentence = noun +" "+ sentence #bag_of_words[0]+" "+noun +" "+ sentence
-
+                sentence = noun +" "+ sentence
                 sent_annotator=Annotator()
                 
                 sent_annotations = sent_annotator.getAnnotations(sentence,dep_parse=True)
                 (sent_words,sent_pos_seq,sent_ner_seq,sent_chunk_seq,sent_dep_seq,sent_srls) = extract_annotations(sent_annotations)
-                #(sent_words,sent_pos_seq,sent_ner_seq,sent_chunk_seq,sent_dep_seq,sent_srls)
                 
                 desire = single_coarse_class.question_desire(sentence)
                 bin_rels = binary_relations(desire,sent_words,sent_pos_seq,sent_ner_seq,sent_chunk_seq,sent_dep_seq)
@@ -813,8 +791,7 @@ def recursive_binaries(bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq,pos,binari
                 
             else :        
                 sentence = bag_of_words[i] +" "+ sentence
-        
-        #print "THe Sentence : ", sentence        
+    
         sentence = bag_of_words[0] + sentence        
         desire = single_coarse_class.question_desire(sentence)
         bin_rels = binary_relations(desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq)
@@ -824,5 +801,5 @@ def recursive_binaries(bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq,pos,binari
         
             binaries.append(rel)
         
-        return binaries #recursive_binaries(bag_of_words[:i],pos_seq[:i],ner_seq[:i],chunk_seq[:i],dep_seq[:i],0,binaries, sent_words)          
+        return binaries 
         

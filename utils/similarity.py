@@ -9,7 +9,6 @@ Created on Mon Mar 27 16:12:45 2017
 from nltk.corpus import wordnet as wn
 from nltk.corpus.reader.wordnet import WordNetError
 from nltk.stem import WordNetLemmatizer
-#from nltk.stem import SnowballStemmer
 from nltk.stem.porter import PorterStemmer 
 import numpy as np
 
@@ -125,6 +124,37 @@ def derivational_forms(first, second):
                      
     return 0
    
+def patterns_match(bag_of_words,patterns):
+    question = " ".join(bag_of_words)
+    score = 0
+    
+    for pattern in patterns :
+        pattern = pattern.strip()
+        
+        if pattern in question :
+            score = score + len(pattern)
+        elif ";" in pattern :
+            seq = pattern.split(";")
+            inc = True
+            for s in seq :
+                prev = 0
+                if s in question:
+                    
+                    pos = question.find(s)
+                    
+                    if pos < prev or pos == -1 :
+                        inc = False
+                        break
+                    else :
+                        prev = pos
+                else:
+                    inc = False
+                    break
+                
+                
+            if inc == True:
+                score = score+len(seq)+1
+    return score       
 
 def lev_similarity(first,second):
     lemmatizer = WordNetLemmatizer()
@@ -144,7 +174,7 @@ def lev_similarity(first,second):
         dist_stems = editdistance.eval(f_stem,s_stem)
         dist_lemmas = editdistance.eval(f_lemma,s_lemma)
     
-        simm_weight = float(denom - dist_lemmas)/denom#1 - (float(dist_lemmas)/float(denom)+ float(dist_stems)/float(denom))/2
+        simm_weight = float(denom - dist_lemmas)/denom
     
         stem_sim = float(stem_denom - dist_stems)/stem_denom
         
@@ -159,7 +189,6 @@ def lev_similarity(first,second):
         return 0
 
 def size_intersection(a,b):
-    #Remove Stop Words
     
     from nltk.corpus import stopwords
     stop = set(stopwords.words('english'))
@@ -251,8 +280,7 @@ def top_similar(all_props, q_rels, q_bag):
         
             spec_word_weight = 0
             spec_stem_weight = 0
-            #if len(rel_words)>1 and len(prop.label)==1:
-               
+            
             for word in rel_words:
                 for label in prop.label.strip("'").split(" "):
                     this_weight,stem_weight = lev_similarity(word,label)
@@ -284,13 +312,10 @@ def top_similar(all_props, q_rels, q_bag):
                         spec_helper_weight = dist_helper
                 
             sim_vector.append(spec_helper_weight)                
-            
-        #try :
-        #print "In try:",q_rels.head
+       
         h_derived_weight=0
         for h in q_rels.head.split(" ") :
-            #w = 0
-            #for label in prop.label.strip("'").split(" "):
+            
             w =  derivational_forms(h,prop.label)
                 
             if w>h_derived_weight:
@@ -318,8 +343,7 @@ def top_similar(all_props, q_rels, q_bag):
         sim_vector.append(h_wup_sim)
 
         hlp_derived_weight=0
-        for h in q_rels.helper.split(" ") :
-            #for label in prop.label.strip("'").split():                
+        for h in q_rels.helper.split(" ") :              
              w = derivational_forms(h, prop.label)
              if w>hlp_derived_weight:
                  hlp_derived_weight = w
@@ -331,7 +355,6 @@ def top_similar(all_props, q_rels, q_bag):
         hlp_max_lch = 0
         hlp_wup_sim = 0
         for h in q_rels.helper.split(" ") :
-            #for label in prop.label.strip("'").split(" "):
              (least_sim,max_lch,wup_sim ) = dist_all_synsets(h,prop.label)
                
              if least_sim>hlp_least_sim:
@@ -348,7 +371,6 @@ def top_similar(all_props, q_rels, q_bag):
         #Get the attributes for the helper word q_rels.non_ent_nouns :    
         hnn_derived_weight=0
         for h in q_rels.non_ent_nouns:
-            #for label in prop.label.strip("'").split(" "):
              w = derivational_forms(h, label)
              if w>hnn_derived_weight:
                  hnn_derived_weight = w
@@ -359,9 +381,7 @@ def top_similar(all_props, q_rels, q_bag):
         hnn_max_lch = 0
         hnn_wup_sim = 0
         for h in q_rels.non_ent_nouns :
-            #for label in prop.label.strip("'").split(" "):
-            (least_sim,max_lch,wup_sim ) = dist_all_synsets(h,label)
-                
+            (least_sim,max_lch,wup_sim ) = dist_all_synsets(h,label)                
             if least_sim>hnn_least_sim:
                  hnn_least_sim=least_sim
             if max_lch>hnn_max_lch:
@@ -374,6 +394,10 @@ def top_similar(all_props, q_rels, q_bag):
         sim_vector.append(hnn_wup_sim)
         sim_vector.append(domain_range_measure(q_rels.desire, prop.domain, prop.range))
         sim_vector.append(in_out_degree_measure(prop.instances_count,prop.uniq_subjs,prop.uniq_objs))
+        
+        if prop.phrases != None :
+             sim_vector.append(patterns_match(q_bag,prop.phrases))
+
         #GETTING THE INTERSECTION OF THE BAG_OF-WORDS
         
         bag_prop = prop.domain+" "+ prop.range+" "+prop.label+ " "+prop.comment
@@ -381,6 +405,7 @@ def top_similar(all_props, q_rels, q_bag):
         in_sec = size_intersection(q_bag,bag_prop)
         
         sim_vector.append(in_sec)
+        
         #ADDING  THE WEIGHT TO THE RETURN VALUES        
         this_weight = np.sum(sim_vector)            
         size = len(weights)
@@ -408,9 +433,7 @@ def top_similar(all_props, q_rels, q_bag):
                 weights.append(this_weight)
                 uri.append(prop.prop_uri )
                              
-                #count_loops = count_loops +1 
-        numbers = numbers+1        
-       # print "Domain : ",prop.domain,"Range : ",prop.range       
+        numbers = numbers+1       
     return weights,uri
 
      
