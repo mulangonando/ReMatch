@@ -266,11 +266,13 @@ def in_out_degree_measure(instances_count, uniq_subjs, uniq_objs ):
     
     
 def top_similar(all_props, q_rels, q_bag): 
+    #print len(all_props)
     weights = [] 
     uri = []
     
     numbers = 1
     for prop in all_props :
+        #print prop.label
         sim_vector = []
         if(q_rels.head.strip().lower() ==  prop.label.strip().lower()) :
             sim_vector.append(20)

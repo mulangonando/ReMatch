@@ -149,6 +149,6 @@ def question_desire(question):
    
     test_class = LinearSVC.predict(clf, X_query)
     
-    print "Test Class : ", test_class
+    #print "Test Class : ", test_class
 
     return test_class
