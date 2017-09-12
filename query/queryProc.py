@@ -13,19 +13,8 @@ from utils import wordnetProc
 from QuestionClassification import single_coarse_class 
 import csv
 import os
+import time
 
-gazzet_file = os.path.abspath(os.path.join('.','Gazetteer','countries.csv'))
-countries_list = []
-
-with open(gazzet_file) as c:
-    countries = csv.reader(c)
-   
-    for row in countries:
-        countries_list.append(row[0].lower())
-        countries_list.append(row[1].lower())
-        countries_list.append(row[2].lower())
-        countries_list.append(row[3].lower())
-        
 #Classes
 class Relation(object):
     def __init__(self, desire,head,head_pos,prep,left,helper,helper_pos,right,num_nps,named_entities,non_ent_nouns ):
@@ -436,6 +425,7 @@ def rel_adjustment (rel,bag_of_words,pos_seq) :
     return rels
         
 def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
+        
     verb_poss = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']
     bin_rels=[]
     question_words = ['who', 'how', 'why', 'whom', 'which', 'when', "where"] 
@@ -605,10 +595,10 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
             curr_rel=Relation(desire,rel,head_pos, prep,subj, helper,helper_pos,object_phrase,num_nps,named_entities,non_ent_nouns)
             
             bin_rels.append(curr_rel)
-            if len(curr.helper)>0 :
-                rel_eliminator[len(rel_eliminator)] = curr.helper +" "+ curr.head  
+            if len(curr_rel.helper)>0 :
+                rel_eliminator[len(rel_eliminator)] = curr_rel.helper +" "+ curr_rel.head  
             else:
-                rel_eliminator[len(rel_eliminator)] = curr.head  
+                rel_eliminator[len(rel_eliminator)] = curr_rel.head  
                                    
         i=i+1 
     
@@ -732,26 +722,39 @@ def binary_relations (desire,bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq):
                    except :
                        pass
                    
-        for n in rel.named_entities:
+        for n in rel.non_ent_nouns :
+                if n.lower() == "country" :
+                    print rel.non_ent_nouns
+                    rel.helper = rel.helper + " " +"country"
+        
+        '''for n in rel.named_entities:
                 if n.lower() in countries_list and rel.prep=="of":
+                    print countries_list[0], countries_list[1], countries_list[2]
                     rel.helper = rel.helper + " " +"country"
                     
         for n in rel.non_ent_nouns :
                 if n.lower() in countries_list and rel.prep=="of" :
+                    print countries_list[0], countries_list[1], countries_list[2]
                     rel.helper = rel.helper + " " +"country"
         
         for n in rel.left :
                 if n.lower() in countries_list and rel.prep=="of" :
+                    print countries_list[0], countries_list[1], countries_list[2]
                     rel.helper = rel.helper + " " +"country"
         
         for n in rel.right :
                 if n.lower() in countries_list  and rel.prep =="of" :
-                    rel.helper = rel.helper + " " +"country"
+                    print countries_list[0], countries_list[1], countries_list[2]
+                    rel.helper = rel.helper + " " +"country"'''
                         
     return bin_rels
 
 def recursive_binaries(bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq,pos,binaries=[], sent_words = []):
+   
+    
+    
     adj_clause_words=["who","whom","whose","which","that"]
+    
     if pos==0:        
         return binaries
     else:
@@ -798,8 +801,8 @@ def recursive_binaries(bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq,pos,binari
         
     
         for rel in bin_rels:
-        
             binaries.append(rel)
         
+                
         return binaries 
         

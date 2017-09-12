@@ -7,9 +7,14 @@ Created on Wed Apr 12 11:04:28 2017
 from query import queryProc
 from practnlptools.tools import Annotator
 from predicates import predicates
-from predicates.predicates import KBproperty
+#from predicates.predicates import KBproperty
 from utils import similarity as sim
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+import SocketServer
+import gc
+import os
+import csv
+import time
 import SocketServer
 import json
 import gc
@@ -18,16 +23,39 @@ import gc
 all_props = []
 requests = 0
 def process_query(query):
-    global requests
-    annotator=Annotator()
-    annotations = annotator.getAnnotations(query,dep_parse=True)
-    (bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq,srls) = queryProc.extract_annotations(annotations)
-    last_pos = len(bag_of_words) - 1    
-   
-    bin_rels=None
-    bin_rels = queryProc.recursive_binaries(bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq,last_pos)
     
-    rels = bin_rels[:(len(bin_rels)-requests)+1]
+    print "Query in Query Proc : ", query
+    
+    gazzet_file = os.path.abspath(os.path.join('.','Gazetteer','country_names.csv'))
+    countries_list = []
+
+    with open(gazzet_file) as c:
+        countries = csv.reader(c)
+   
+        for row in countries:
+            countries_list.append(row[0].lower())
+            countries_list.append(row[1].lower())
+            countries_list.append(row[2].lower())
+    
+    query = query.replace("-"," ")
+    
+    '''for word in query_words:
+        
+        if word.lower() in countries_list:
+            query = query.replace(word,"country")
+            print word'''
+            
+    global requests 
+    annotator = Annotator()
+    annotations = annotator.getAnnotations(query,dep_parse=True)
+    
+    (bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq,srls) = queryProc.extract_annotations(annotations)
+    
+    last_pos = len(bag_of_words) - 1    
+
+    bin_rels = queryProc.recursive_binaries(bag_of_words,pos_seq,ner_seq,chunk_seq,dep_seq,last_pos,binaries=[], sent_words = [])
+    
+    rels = bin_rels #[:(len(bin_rels)-requests)+1]
     
     requests = len(bin_rels)
     
@@ -51,16 +79,19 @@ def process_query(query):
     ner_seq = None
     chunk_seq = None
     dep_seq = None
-    srls = None
+    #srls = None
     last_pos = None
     gc.collect()
     return clean_rels, bag_of_words 
-
 '''
 def main():
-        
+    start = time.time()   
     all_props = predicates.get_AllKBproperties()
-    bin_rels, bag_of_words=process_query("Give me all people that were born in Vienna and died in Berlin")
+    
+    
+    
+    bin_rels, bag_of_words=process_query("Which actress starring in the TV series Friends owns the production company Coquette Productions?")
+     
     
     j=0
     for relation in bin_rels :
@@ -79,19 +110,23 @@ def main():
             print str(weights[i])+" : "+uri[i]+"\n"
  
         j=j+1
-
+    
+    stop = time.time()
+    #delta = stop - start
+    print  stop - start #'#"Time in the Recursive Function : ",delta.total_seconds()
             
 if __name__== "__main__":
-  main()'''
+  main()
 
     #EVALUATION CODE
     
     #end_time =start_time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
     #print "\n\n",start_time,"\n\n"
-    #print "\n\n",end_time,"\n\n"'''
-'''all_props = predicates.get_AllKBproperties()
+    #print "\n\n",end_time,"\n\n"
+'''
+all_props = predicates.get_AllKBproperties()
      
-    datasets_file = "auto_queries.csv"
+'''    datasets_file = "auto_queries.csv"
     test_outputs= "test_outputs"
     
     #LOAD THE CSV FILE HERE
@@ -152,18 +187,17 @@ if __name__== "__main__":
                 del curr_eval
                 #del line
                 gc.collect()
-https://de.wikipedia.org/wiki/Raila_Odinga
+                
             #gc.collect()
             
             starter = starter + 1
-        
-        #with open(test_outputs) as out_file :'''
-            
+'''        
+        #with open(test_outputs) as out_file :            
 class S(BaseHTTPRequestHandler):
     
-    '''def _init_(self):
-        global all_props = []
-        '''  
+    def _init_(self):
+        global all_props
+         
         
     def _set_headers(self):
         self.send_response(200)
@@ -181,7 +215,8 @@ class S(BaseHTTPRequestHandler):
         global all_props
         content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
         post_data = self.rfile.read(content_length) # <--- Gets the data itself
-        print post_data
+        print "Post Data : ",post_data
+        bin_rels = []
         bin_rels, bag_of_words=process_query(post_data)
         del post_data
         j=0
@@ -232,10 +267,10 @@ class S(BaseHTTPRequestHandler):
         bag_of_words = None
         gc.collect()
         
-def run(server_class=HTTPServer, handler_class=S, port=8081):
-    global all_props 
-    all_props = predicates.get_AllKBproperties()
-    print len(all_props)
+def run(server_class=HTTPServer, handler_class=S, port=8082):
+    global all_props
+    #all_props = predicates.get_AllKBproperties()
+    #print len(all_props)
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)
     print 'Starting httpd...'

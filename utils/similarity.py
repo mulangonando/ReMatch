@@ -329,8 +329,11 @@ def top_similar(all_props, q_rels, q_bag):
         h_least_sim = 0
         h_max_lch = 0
         h_wup_sim = 0
+        
+        k=0
+        prop_lable = prop.label.strip("'").split(" ")
         for h in q_rels.head.split(" ") :
-            for label in prop.label.strip("'").split(" "):
+            for label in prop_lable :
                 (least_sim,max_lch,wup_sim ) = dist_all_synsets(h,label)
                            
                 if least_sim>h_least_sim:
@@ -339,10 +342,17 @@ def top_similar(all_props, q_rels, q_bag):
                     h_max_lch=max_lch
                 if wup_sim>h_wup_sim:
                     h_wup_sim= wup_sim
-                
-        sim_vector.append(h_least_sim)
-        sim_vector.append(h_max_lch)
-        sim_vector.append(h_wup_sim)
+            
+            k=k+1
+              
+        if k==1 and len(prop_lable)==1:
+            sim_vector.append(h_least_sim*len(q_rels.head))
+            sim_vector.append(h_max_lch*len(q_rels.head))
+            sim_vector.append(h_wup_sim*len(q_rels.head))
+        else:
+            sim_vector.append(h_least_sim)
+            sim_vector.append(h_max_lch)
+            sim_vector.append(h_wup_sim)
 
         hlp_derived_weight=0
         for h in q_rels.helper.split(" ") :              

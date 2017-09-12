@@ -1,1 +1,1 @@
-(S1(SBAR(WHADVP(WRB How))(S(NP(JJ many)(NNS people))(VP(VBP livein)(NP(NP(DT the)(NN capital))(PP(IN of)(NP(NNP Australia)))))(. ?))))
+(S1(SBARQ(WHNP(WP What))(SQ(VP(VBZ is)(NP(NP(DT the)(NN capital)(NN cit))(PP(IN of)(NP(NNP Australia))))))(. ?)))

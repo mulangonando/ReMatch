@@ -146,8 +146,10 @@ def file_processor() :
             synonyms = wordnetProc.get_synonyms(pred_label)
             hyponyms = wordnetProc.get_hyponyms(pred_label)
             
-            kb_prop.syn_hypo = ''.join(w for w in synonyms)
-            kb_prop.syn_hypo = kb_prop.syn_hypo.join(w for w in hyponyms)
+            for w in synonyms:
+                kb_prop.syn_hypo = kb_prop.syn_hypo.join(w)
+            for w in hyponyms:
+                kb_prop.syn_hypo = kb_prop.syn_hypo.join(w)
             
             if pred_label in words_dict :
                 kb_prop.phrases = words_dict[pred_label]
