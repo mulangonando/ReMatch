@@ -6,8 +6,7 @@ Created on Wed Apr 12 11:04:28 2017
 """
 from query import queryProc
 from practnlptools.tools import Annotator
-from predicates import predicates
-#from predicates.predicates import KBproperty
+from predicates.predicates import KBproperty
 from utils import similarity as sim
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import SocketServer
@@ -17,14 +16,20 @@ import csv
 import time
 import SocketServer
 import json
-import gc
+import gc, sys
+import cPickle as pic
 #from time import gmtime, strftime
+
+proj_dir = os.path.abspath(os.path.join('.'))
+binaries_dir = os.path.abspath(os.path.join('.','DBPedia','onto_binaries'))
+sys.path.append(proj_dir)
+dbpedia_prop = os.path.abspath(os.path.join(binaries_dir,"prop"))
+rels_file = os.path.abspath(os.path.join('DBPedia','rel_words'))
 
 all_props = []
 requests = 0
+
 def process_query(query):
-    
-    print "Query in Query Proc : ", query
     
     gazzet_file = os.path.abspath(os.path.join('.','Gazetteer','country_names.csv'))
     countries_list = []
@@ -58,9 +63,6 @@ def process_query(query):
     rels = bin_rels #[:(len(bin_rels)-requests)+1]
     
     requests = len(bin_rels)
-    
-    print "Request : ",requests
-    print "LEN RELS : ",len(rels)
 
     clean_rels = []
     prev_rel_heads = ""
@@ -83,6 +85,31 @@ def process_query(query):
     last_pos = None
     gc.collect()
     return clean_rels, bag_of_words 
+
+        
+def get_AllKBproperties():
+    global KBproperty
+    #fileObject = open(dbpedia_binaries,'r')  
+    dbpedia_props = []
+    
+    file_names = []
+    for file in os.listdir(binaries_dir):
+        if file.endswith(".pkl"):
+            file_names.append(os.path.join(binaries_dir, file))
+    
+    for name in file_names :
+        
+        with open(name, "rb") as f:
+            kb_prop = KBproperty()
+            kb_prop = pic.load(f)
+            dbpedia_props.append( kb_prop )
+            
+            print kb_prop.prop_uri
+            #print dbpedia_props(0)
+            f.close()
+    
+    return dbpedia_props
+
 '''
 def main():
     start = time.time()   
@@ -124,7 +151,7 @@ if __name__== "__main__":
     #print "\n\n",start_time,"\n\n"
     #print "\n\n",end_time,"\n\n"
 '''
-all_props = predicates.get_AllKBproperties()
+all_props = get_AllKBproperties()
      
 '''    datasets_file = "auto_queries.csv"
     test_outputs= "test_outputs"
@@ -215,7 +242,7 @@ class S(BaseHTTPRequestHandler):
         global all_props
         content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
         post_data = self.rfile.read(content_length) # <--- Gets the data itself
-        print "Post Data : ",post_data
+        #print "Post Data : ",post_data
         bin_rels = []
         bin_rels, bag_of_words=process_query(post_data)
         del post_data
@@ -224,7 +251,7 @@ class S(BaseHTTPRequestHandler):
         data_dict ={}
 
         for relation in bin_rels :
-            print relation.head.strip()
+            #print relation.head.strip()
             weights,uri = sim.top_similar(all_props, relation, bag_of_words) 
             
             #self.wfile.write(uri)
@@ -262,12 +289,11 @@ class S(BaseHTTPRequestHandler):
         self.wfile.write(json_data)
         
         bin_rels = None
-        post_data = None
         relation = None
         bag_of_words = None
         gc.collect()
-        
-def run(server_class=HTTPServer, handler_class=S, port=8082):
+
+def run(server_class=HTTPServer, handler_class=S, port=8081):
     global all_props
     #all_props = predicates.get_AllKBproperties()
     #print len(all_props)

@@ -6,11 +6,12 @@ Created on Wed Mar 22 10:25:34 2017
 @author: mulang
 """
 
-import cPickle as pickle
+import cPickle as pic
 import re
 import os, sys
 from practnlptools.tools import Annotator
 import csv
+#import kbproperty as KBproperty
 
 
 proj_dir = os.path.abspath(os.path.join('.'))
@@ -25,8 +26,6 @@ from utils import wordnetProc
 annotator=Annotator()
 annotations = annotator.getAnnotations("currency code",dep_parse=True)
 
-#HERE CREATE A CLASS OF PREDICATE : TO REP A PREDICATE AND ALL IT'S ATTRIBUTES
-
 class KBproperty(object):
     def __init__(self):
         self.prop_uri = ""
@@ -38,9 +37,10 @@ class KBproperty(object):
         self.uniq_subjs = 0
         self.uniq_objs = 0
         self.annotations = None
-        self.phrases
-        self.syn_hypo
-            
+        self.phrases = []
+        self.syn_hypo = ""
+#sys.modules[__name__] = KBproperty()
+
 def extract_annotations(annotations):
     srls = annotations['srl']
     poss = annotations['pos']
@@ -173,28 +173,9 @@ def file_processor() :
             kb_prop.annotations["srls"] = srls
                                     
             with open(dbpedia_prop+"_"+str(i)+".pkl", "wb") as data_file:
-                pickle.dump(kb_prop, data_file)
+                pic.dump(kb_prop, data_file)
                 data_file.close
             
             i=i+1
                
         f.close()
-
-def get_AllKBproperties():
-    
-    #fileObject = open(dbpedia_binaries,'r')  
-    dbpedia_props = []
-    file_names = []
-    for file in os.listdir(binaries_dir):
-        if file.endswith(".pkl"):
-            file_names.append(os.path.join(binaries_dir, file))
-    
-    for name in file_names :
-        
-        with open(name, "rb") as f:
-            dbpedia_props.append(pickle.load(f) )
-            #print dbpedia_props(0)
-            
-            f.close()
-    
-    return dbpedia_props
