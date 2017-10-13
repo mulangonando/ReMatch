@@ -1,10 +1,17 @@
 Clone the Git
+
 Install Python with the following requirements:
+
   Python 2.7
+  
   NLTK (The later the better : Ensure you download Wordnet )
+  
   Scikit-learn
+
 Install PractNLP-tools
+
 Install ConfigObj
+
 Install editdistance
 
 Any Problems? [At this point any problem is because of you]
