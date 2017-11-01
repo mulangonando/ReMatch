@@ -10,10 +10,4 @@ Install Python with the following requirements:
 
 Install PractNLP-tools
 
-Install ConfigObj
-
-Install editdistance
-
-Any Problems? [At this point any problem is because of you]
-
-The Public endpoint for Rematch is: curl -d "Who is the wife of Barack Obama ? " http://94.130.104.232:8080
+Most of the time, based on our experience, it is not possible to run our code locally due to some dependency problem, we are fixing this issue. Till then, we made a web service for this component. The Public endpoint for Rematch is: curl -d "Who is the wife of Barack Obama ? " http://94.130.104.232:8080
